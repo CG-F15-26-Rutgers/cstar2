@@ -31,11 +31,17 @@
 #define TIEBREAKER true
 #define PART3 false
 
+#define PART_4 true
+#define H_1 2
+#define H_2 4
+#define H_3 8
+
+
 /*
 	Part 1: no weights
 	Part 2: same f value, tiebreaker goes to g value
 	Part 3: add diagonal weight, tiebreaker goes to g value
-	Part 4: weight A
+	Part 4: weight A, tiebreaker goes to g value
 */
 
 namespace SteerLib
@@ -254,6 +260,11 @@ namespace SteerLib
 					continue;
 				}
 
+
+				if (PART_4)
+				{
+					double neighbor_h = H_3 * Heuristic(neighborpoint, goalpoint);
+				}
 				// add this ish
 				camefrom[neighbor] = curr;
 				g_score[neighbor] = tent_g;

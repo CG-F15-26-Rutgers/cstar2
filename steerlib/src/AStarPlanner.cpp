@@ -22,8 +22,6 @@
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
-#define DPAD 1
-#define DIAGONAL sqrt(2)
 // 1 --> Manhattan
 // 2 --> Euclidean
 #define HEURISTIC 2
@@ -31,7 +29,7 @@
 #define TIEBREAKER true
 #define PART3 false
 
-#define PART_4 true
+#define PART_4 false
 #define H_1 2
 #define H_2 4
 #define H_3 8
@@ -151,13 +149,13 @@ namespace SteerLib
 		}
 		else {
 			double lowest_f = 1000000000000000000;
-			double largest_g = -1000000000000000000;
+			double largest_g = 1000000000000000000;
 			int pos;
 
 			for (std::set<int>::iterator iter = openset.begin(); iter != openset.end(); iter++) {
 				int ptr = *iter;
 
-				if (f_score[ptr] < lowest_f || (f_score[ptr] == lowest_f && g_score[ptr] > largest_g)) {
+				if (f_score[ptr] < lowest_f || (f_score[ptr] == lowest_f && g_score[ptr] < largest_g)) {
 					largest_g = g_score[ptr];
 					lowest_f = f_score[ptr];
 					pos = ptr;
@@ -186,9 +184,6 @@ namespace SteerLib
 	bool AStarPlanner::computePath(std::vector<Util::Point>& agent_path, Util::Point start, Util::Point goal, SteerLib::GridDatabase2D * _gSpatialDatabase, bool append_to_path)
 	{
 		gSpatialDatabase = _gSpatialDatabase;
-
-		//TODO
-		//std::cout << "\nIn A*";
 		
 		// init sets
 		std::set<int> openset, closedset, neighbors;
@@ -209,18 +204,14 @@ namespace SteerLib
 		g_score.insert(std::pair<int, double>(startindex, start_g));
 		f_score.insert(std::pair<int, double>(startindex, start_f));
 
-		printf("\n*******\n");
-		printf("start: %d\n", startindex);
-		printf("goal: %d\n", goalindex);
-		printf("*******\n");
-
 		while (!openset.empty()) {
 			int curr = GetLowestFPosition(openset, g_score, f_score);
 
 			Util::Point currpoint = getPointFromGridIndex(curr);
 			if (curr == goalindex) {
-				printf("GOAL\n");
 				agent_path = reconstruct(camefrom, curr);
+				printf("Length of solution: %lu \n", agent_path.size());
+				printf("Number of expanded nodes: %lu \n", closedset.size());
 				return true;
 			}
 
@@ -228,27 +219,19 @@ namespace SteerLib
 			closedset.insert(curr);
 
 			std::set<int> neighbors = GetNeighbors(curr);
-			int i = 0;
 			for (std::set<int>::iterator iter = neighbors.begin(); iter != neighbors.end(); iter++) {
-				i++;
 				int neighbor = *iter;
 				Util::Point neighborpoint = getPointFromGridIndex(neighbor);
 
 				if (closedset.count(neighbor) == 1 || !canBeTraversed(neighbor))
 					continue;
 
-				double tent_g;
 				if (PART3) {
-					if (i < 4) {
-						tent_g = g_score[curr] + DPAD;
-					}
-					else {
-						tent_g = g_score[curr] + DIAGONAL;
-					}
+					if (currpoint.x != neighborpoint.x && currpoint.z != neighborpoint.z)
+						continue;
 				}
-				else {
-					tent_g = g_score[curr] + DPAD;
-				}
+
+				double tent_g = g_score[curr] + Heuristic(currpoint, neighborpoint);
 
 				// check if neighbor in openset
 				if (openset.count(neighbor) == 0) {
@@ -262,10 +245,8 @@ namespace SteerLib
 
 
 				if (PART_4)
-				{
 					//Changing H_3 to H_1, or H_2 will change the heuristic 
 					double neighbor_h = H_3 * Heuristic(neighborpoint, goalpoint);
-				}
 
 				// add this ish
 				camefrom[neighbor] = curr;
@@ -274,7 +255,6 @@ namespace SteerLib
 				f_score[neighbor] = g_score[neighbor] + neighbor_h;
 			}
 		}
-
 
 		return false;
 	}

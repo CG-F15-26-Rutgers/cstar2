@@ -263,8 +263,10 @@ namespace SteerLib
 
 				if (PART_4)
 				{
+					//Changing H_3 to H_1, or H_2 will change the heuristic 
 					double neighbor_h = H_3 * Heuristic(neighborpoint, goalpoint);
 				}
+
 				// add this ish
 				camefrom[neighbor] = curr;
 				g_score[neighbor] = tent_g;
